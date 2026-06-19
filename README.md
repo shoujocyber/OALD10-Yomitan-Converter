@@ -6,10 +6,11 @@ An advanced Python script to deeply parse, clean, and restructure the **Oxford A
 
 Unlike raw MDX conversions (e.g., via PyGlossary) which result in cluttered HTML layouts and overlapping labels, this script performs a "surgical extraction" specifically tailored for this dictionary to guarantee the best reading experience on Yomitan flashcards:
 
+- **Ultimate Aggregation Engine (终极聚合引擎)**: Automatically resolves multi-directional redirects and folds identical upstream definitions (like UK/US spelling variants) into a single, clean entry using Joint Primary Key deduplication.
 - **Intelligent Example Sorting (智能例句优选)**: Prioritizes official translations. Relegates machine translation `[AI机翻]` and unofficial proofreading `[个人审校]` to the bottom, or drops them entirely if official examples are sufficient.
 - **Construction Frames (语法句型框)**: Extracts syntactic patterns (e.g., `[read something into something]`) and elegantly prefixes them to examples and definitions.
-- **Tag Deduplication (防标签吞噬)**: Merges and deduplicates global and local meta-tags (e.g., `[informal]`, `[singular]`) to prevent layout bugs.
-- **Cross-References & Idioms (词汇网络)**: Gracefully appends synonyms (`🔗 synonym`), related words, idioms (`📌`), and lists related Phrasal Verbs at the bottom of the entry.
+- **Tag Isolation & Native Badges (标签防污染与原生高亮)**: Strict DOM tree isolation prevents global tags from polluting child idioms. Auto-generates `tag_bank_1.json` for beautiful, native Yomitan part-of-speech badges.
+- **1-Click Auto-Packaging (一键全自动打包)**: Automatically generates `index.json`, compresses all chunks into a final `.zip` file, and cleans up temporary JSON fragments.
 
 ---
 
@@ -67,49 +68,21 @@ mdict -x oaldpe.mdx -d ./
 ```
 *(Ensure the output text file is renamed exactly to `oaldpe.txt` and placed in the same folder as `main.py`)*
 
-### Step 4: Run the Parser (运行清洗脚本)
+### Step 4: Run the Parser (运行清洗与自动打包)
 1. Install the HTML parsing library:
 ```bash
 pip install beautifulsoup4
 ```
-2. Run the script:
+2. Run the conversion script using the command line:
 ```bash
-python main.py
+python main.py -i path/to/your/oaldpe.txt -o path/to/output_folder
 ```
-Wait for the script to finish. It will parse ~62,000 core words and expand them to ~700,000 terms (including inflections), outputting them into a new folder named `yomitan_out/`.
+- -i or --input: (Required) Path to the extracted MDX text file.
+- -o or --output: (Optional) Path to save the Yomitan JSON files. Defaults to ./yomitan_out.
 
-### Step 5: Package for Yomitan (打包为Yomitan格式)
-1. Create a file named `index.json` in the `yomitan_out/` folder and paste this metadata:
-```json
-{
-  "title": "Oxford Advanced Learner's Dictionary",
-  "format": 3,
-  "revision": "v1.0.0",
-  "sequenced": true,
-  "author": "Open Source Converter",
-  "url": "https://github.com/shoujocyber/OALD10-Yomitan-Converter",
-  "description": "牛津高阶英汉双解词典(第10版)纯净版"
-}
-```
-2. Create a file named `tag_bank_1.json` in the `yomitan_out/` folder to enable native coloring in Yomitan:
-```json
-[
-  ["noun", "partOfSpeech", 0, "名词 (Noun)", 0],
-  ["verb", "partOfSpeech", 0, "动词 (Verb)", 0],
-  ["adjective", "partOfSpeech", 0, "形容词 (Adjective)", 0],
-  ["adverb", "partOfSpeech", 0, "副词 (Adverb)", 0],
-  ["pronoun", "partOfSpeech", 0, "代词 (Pronoun)", 0],
-  ["preposition", "partOfSpeech", 0, "介词 (Preposition)", 0],
-  ["conjunction", "partOfSpeech", 0, "连词 (Conjunction)", 0],
-  ["interjection", "partOfSpeech", 0, "感叹词 (Interjection)", 0],
-  ["determiner", "partOfSpeech", 0, "限定词 (Determiner)", 0],
-  ["idiom", "expression", 0, "习语 (Idiom)", 0],
-  ["phrasal verb", "expression", 0, "动词短语 (Phrasal Verb)", 0],
-  ["Oxford Advanced Learner's Dictionary", "dictionary", -10, "牛津高阶英汉双解词典 第10版", 0]
-]
-```
-3. **Zip it!** Select all `.json` files inside the `yomitan_out/` folder and compress them into a `.zip` archive (do not zip the folder itself, zip the files). 
-4. Import the `.zip` file into Yomitan.
+3. Wait for the magic to happen! The script will parse the data, generate the dictionaries, write data forensic reports, and automatically pack everything into a final zip file (e.g., OALD10_Yomitan_v1.2.0.zip).
+
+4. Import to Yomitan: Open your Yomitan settings, go to Dictionaries, and import the newly generated .zip file directly. Done!
 
 ---
 

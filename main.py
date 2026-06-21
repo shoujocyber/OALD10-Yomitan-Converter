@@ -20,7 +20,7 @@ import glob
 from bs4 import BeautifulSoup
 
 # === Configuration & Metadata ===
-VERSION = "1.2.0"
+VERSION = "1.2.1"
 AUTHOR = "shoujocyber"
 
 def generate_metadata_files(output_dir):
@@ -286,7 +286,10 @@ def parse_mdict_stable(input_file, output_dir):
                             
                             if not eng_def and not chn_def: continue
                                 
-                            prefix = f"{chr(0x2460 + idx)} " if idx < 20 else f"({idx+1}) " if total_senses > 1 else ""
+                            prefix = ""
+                            if total_senses > 1:
+                                prefix = f"{chr(0x2460 + idx)} " if idx < 20 else f"({idx+1}) "
+                            
                             sense_text = f"■ {meta_info}\n" if meta_info else ""
                             sense_text += f"{prefix}{idiom_prefix}{eng_def}\n   {chn_def}".strip()
                             

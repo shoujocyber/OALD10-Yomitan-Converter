@@ -20,7 +20,9 @@ Unlike raw MDX conversions (e.g., via PyGlossary) which result in cluttered HTML
 *(A clean layout, native Yomitan tag coloring, smart example sorting, and deep panel extraction.)*
 
 **Clean Layout & Deep Restructuring (纯净排版与特种面板解析)**
-<img width="662" height="4096" alt="image" src="https://github.com/user-attachments/assets/83691e5d-d773-46a0-bf6e-949cc6f4c1e4" />
+
+<img alt="image" src="https://github.com/user-attachments/assets/97b13623-ba10-4feb-8ea1-ea3403d8552c" />
+
 
 ---
 

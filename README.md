@@ -1,128 +1,153 @@
-# OALD10-Yomitan-Converter (Dictionary Builder)
+# OALD10-Yomitan-Converter
 
-An advanced Python script to deeply parse, clean, and restructure the **Oxford Advanced Learner's Dictionary (10th Ed) EN-ZH** MDX data into a highly optimized, native Yomitan/Yomichan JSON dictionary.
+A Python converter that parses the **Oxford Advanced Learner's Dictionary, 10th Edition (EN-ZH)** MDX data and rebuilds it as a native Yomitan structured-content dictionary.
 
-## 🌟 Features (V3.0 核心特性)
+The project focuses on three things: clean Yomitan rendering, predictable Anki export, and an auditable conversion pipeline. Dictionary data is not included in this repository.
 
-Unlike raw MDX conversions (e.g., via PyGlossary) which result in cluttered HTML layouts and broken labels, this script uses a decoupled **Extractor -> IR -> Renderer -> Packager** pipeline designed specifically for this OALD source.
+## 🌟 Features (V3.1)
 
-- **Structured-content first (原生结构化内容)**: Rebuilds entries as Yomitan structured content instead of dumping raw MDX HTML, so definitions, examples, labels, links, and collapsible panels render cleanly in Yomitan and Anki exports.
-- **Cleaner OALD extraction (更稳的 OALD 抽取)**: Preserves headword labels, sense-level topic/grammar labels, variants, patterns, shortcuts, homophones, word origins, collocations, extra examples, word finder panels, and cross-references while avoiding common label leaks and fake bottom headings.
-- **Anki-safe output (Anki 导入友好)**: Removes unsupported inline `style` fields and strips `open` fields from normal builds, preventing Yomitan import errors and messy Anki card output.
-- **Bilingual/monolingual layout tuning (双语/单语独立排版)**: Uses separate CSS spacing for bilingual and monolingual examples, stable numbered sense headers, compact grammar pills, aligned example markers, and cleaner collapsible panels.
-- **Debug workflow (调试工作流)**: `--debug` and `--test-words` create small readable test packages; debug panels open by default for quick visual inspection, while `--closed-panels` can force Anki-like closed output.
-- **Built-in package validation (内置包体自检)**: After building, the script validates required Yomitan files, term bank counts, structured rows, redirects, unsupported keys, blank sense headers, and mode-specific CSS.
-- **Internationalization (i18n 国际化)**: Supports bilingual EN-ZH and monolingual EN-EN content, with Chinese or English UI tag metadata.
+- **Extractor -> IR -> Renderer -> Packager architecture**: MDX HTML is normalized into an intermediate representation before any Yomitan JSON is rendered.
+- **Full source-to-IR integrity audit**: counts entries, senses, definitions, translations, retained examples, topics, sense-level Oxford/CEFR labels, usage notes, panels, panel payloads, and cross-references. Sense-level mismatches stop the build instead of being silently ignored.
+- **Complete known-panel coverage**: handles all 18 panel types found in the current source, including Word Origin, Collocations, Extra Examples, Homophones, Wordfinder, Word Family, Language Bank, Which Word, Grammar, Vocabulary, Verb Forms, and Synonyms.
+- **Cleaner OALD extraction**: preserves shortcuts, grammar/topic labels, entry- and sense-level Oxford3000/Oxford5000 + CEFR labels, variants, construction patterns, definition links, multiple example lists, usage notes, phrasal verbs, idioms, and nested rich text.
+- **Conservative visual hierarchy**: stable sense numbering, readable bilingual/monolingual definitions, aligned examples, compact semantic labels, and level-aware collapsible panels.
+- **Anki-safe structured content**: normal builds contain no unsupported inline `style` fields or debug-only `open` fields. Rendering uses semantic classes defined in the bundled stylesheet.
+- **Source hygiene**: filters 37 internal `oalecd_ref_*` reference pages and source-empty entry placeholders so they cannot become fake or blank dictionary results.
+- **Strict package validation**: checks required files, JSON rows, empty definitions, blank headers, leaked internal markers, undefined tags, undefined CSS classes, mode-specific language policy, and redirects to missing terms. Immersion rejects Chinese body content; Global rejects both Chinese-language nodes and untagged CJK text.
+- **Release-grade metadata**: separates the converter version, dictionary build revision, and source-data revision; publishes project, release, and source-attribution links; and declares source/target languages for each edition.
+- **Three output editions**: Standard Bilingual, Chinese-assisted Immersion, and English-only Global.
+- **Focused debug builds**: `--test-words` builds a small readable package without weakening the same extraction and ZIP validation rules.
 
----
+## 📸 Screenshot
 
-## 📸 Screenshots (实际效果)
+<img alt="OALD 10 rendered in Yomitan" src="https://github.com/user-attachments/assets/da0fe523-5870-4ce6-8929-fc222f0a04b7" />
 
-*(A clean layout, native Yomitan tag coloring, smart example sorting, and deep panel extraction.)*
+## 📋 Requirements
 
-**Clean Layout & Deep Restructuring (纯净排版与特种面板解析)**
+- Python 3.10 or newer
+- `beautifulsoup4`
+- `tqdm`
+- `mdict-utils` if the MDX still needs to be extracted
 
-<img alt="image" src="https://github.com/user-attachments/assets/b6e4e282-0092-4300-bd19-10fd3dfa0882" />
+Using a virtual environment is recommended.
 
+### Windows
 
----
-
-## 📋 Prerequisites (环境要求)
-
-- **Python**: Version 3.10 or higher.
-- **OS**: Windows, macOS, or Linux.
-
----
-
-## 🛠️ How to Build (如何自己构建)
-
-Because of copyright restrictions, **this repository DOES NOT contain the dictionary data**. You must build it yourself using the original MDX file.
-
-### Step 1: Obtain the MDX (获取原始词典)
-This script is strictly designed to parse the **OALD 10th Edition** shared by xingxingla on the Freemdict Forum.
-
-🔗 **Source link**: [牛津高阶双解第10版完美版重生版（OALDPEX） - Freemdict Forum](https://forum.freemdict.com/t/topic/43710)
-Please download the `oaldpe.mdx` file from the link above.
-
-### Step 2: Set Up Virtual Environment (推荐配置虚拟环境)
-It is highly recommended to use a virtual environment to avoid conflicts with your system packages. Open your terminal and run:
-
-**For Windows:**
-```bash
+```powershell
 python -m venv venv
-venv\Scripts\activate
+.\venv\Scripts\Activate.ps1
+pip install beautifulsoup4 tqdm mdict-utils
 ```
 
-**For macOS/Linux:**
+### macOS / Linux
+
 ```bash
 python3 -m venv venv
 source venv/bin/activate
+pip install beautifulsoup4 tqdm mdict-utils
 ```
 
-### Step 3: Unpack the MDX (解包MDX)
-1. Install the required MDX extraction tool:
-```bash
-pip install mdict-utils
-```
-2. Extract the MDX file into a plain text file named `oaldpe.txt`:
+## 🛠️ Obtain and Extract the Source
+
+This converter targets the OALD 10 data shared by xingxingla on the FreeMdict Forum:
+
+- [牛津高阶双解第10版完美版重生版（OALDPEX）](https://forum.freemdict.com/t/topic/43710)
+
+Extract the MDX with `mdict-utils`:
+
 ```bash
 mdict -x oaldpe.mdx -d ./
 ```
-*(Ensure the output text file is renamed exactly to `oaldpe.txt` and placed in the same folder as `main.py`)*
 
-### Step 4: Run the Parser (运行清洗与自动打包)
+Pass the actual extracted text filename to `-i`. It does not need to be renamed to `oaldpe.txt`.
 
-1. Install the HTML parsing and progress bar libraries:
-```bash
-pip install beautifulsoup4 tqdm
+## Build Dictionaries
+
+Use a separate output directory for each edition. This is required when builds are run in parallel and also keeps the generated files easy to identify.
+
+### Standard Bilingual
+
+English definitions, Chinese translations, and Chinese UI labels:
+
+```powershell
+python main.py -i oaldpe-20260711.mdx.txt -o build\bilingual -m bilingual -u zh
 ```
 
-2. Run the conversion script using the command line:
+Output: `OALD10_Yomitan_V3.1.0.zip`
 
-**Bilingual Mode / Chinese Tags (英汉双解 + 中文标签释义)**:
-```bash
-python main.py -i path/to/your/oaldpe.txt
+### Immersion
+
+English definitions, examples, notes, and panel bodies with Chinese-assisted navigation and compact metadata. Source translations are retained for shortcuts, variants, register/region labels, and usage restrictions; a closed glossary supplies common grammar labels such as `countable 可数` and `intransitive 不及物`:
+
+```powershell
+python main.py -i oaldpe-20260711.mdx.txt -o build\immersion -m mono -u zh
 ```
 
-**Monolingual Mode / Chinese Tags (纯英沉浸 + 中文标签释义)**:
-```bash
-python main.py -i path/to/your/oaldpe.txt -m mono -u zh
+Output: `OALD10_Yomitan_V3.1.0_Immersion.zip`
+
+### Global
+
+English-only dictionary content, metadata, and UI labels:
+
+```powershell
+python main.py -i oaldpe-20260711.mdx.txt -o build\global -m mono -u en
 ```
 
-**Monolingual Mode / English Tags (纯英国际 + 英文标签)**:
-```bash
-python main.py -i path/to/your/oaldpe.txt -m mono -u en
+Output: `OALD10_Yomitan_V3.1.0_Global.zip`
+
+Full builds are CPU-intensive. Sequential builds are the conservative choice; parallel builds should use different output directories and enough available memory.
+
+The dictionary revision shown by Yomitan defaults to the date on which the package is built. The source-data revision is inferred separately from an eight-digit date in the input filename and written to the description. For example, a package rebuilt on 2026-07-15 from `oaldpe-20260711.mdx.txt` displays `rev.2026.07.15`, while its description records source data `2026.07.11` and converter `v3.1.0`.
+
+For a coordinated three-edition release, pass the same explicit revision to all three commands (for example, `--revision 2026.07.15`). This keeps the release reproducible and avoids different dates if a long build crosses midnight.
+
+## Debug Workflow
+
+Build only selected words:
+
+```powershell
+python main.py -i oaldpe-20260711.mdx.txt -o build\debug --test-words "read,judgement,attention,outstay"
 ```
 
-**Debug Build / Selected Words (调试小包)**:
-```bash
-python main.py -i path/to/your/oaldpe.txt --test-words read,judgement,attention
-```
+Debug builds write indented JSON, keep `term_bank_*.json` by default, and open details panels for visual inspection. Add `--closed-panels` to reproduce normal release behavior.
 
-**Arguments Documentation**:
-- `-i`, `--input`: Required. Path to the extracted MDX text file.
-- `-o`, `--output`: Output folder path. Defaults to `./yomitan_v3`.
-- `-m`, `--mode`: Dictionary content mode. Choose `bilingual` (default) or `mono`.
-- `-u`, `--ui-lang`: Language for Yomitan tag names and metadata. Choose `zh` (default) or `en`.
-- `--debug`: Build only the default debug word list and write readable indented JSON. Details panels are open by default in debug builds.
-- `--test-words`: Comma-separated words for a small debug build. Passing this flag implies `--debug`.
-- `--open-panels`: Force collapsible details panels to be open in the generated structured content.
-- `--closed-panels`: Keep details panels closed even in debug builds.
-- `--keep-json`: Keep generated `term_bank_*.json` files after creating the zip. Debug builds keep them by default.
-- `--discard-json`: Remove generated `term_bank_*.json` files after creating the zip, even in debug builds.
-- `--skip-validation`: Skip the built-in Yomitan zip validation step.
+## Arguments
 
-3. Wait for the magic to happen! The script will parse the data, generate the dictionaries, validate the generated Yomitan package, and automatically pack everything into a final zip file (e.g., `OALD10_Yomitan_V3.0.0.zip` or `OALD10_Yomitan_V3.0.0_Immersion.zip`).
+| Argument | Description |
+| --- | --- |
+| `-i`, `--input` | Required path to the extracted MDX text file. |
+| `-o`, `--output` | Output directory. Default: `./yomitan_v3`. |
+| `-m`, `--mode` | `bilingual` (default) or `mono`. |
+| `-u`, `--ui-lang` | `zh` (default) or `en` for UI labels and metadata. |
+| `--revision` | Build revision displayed by Yomitan. Defaults to today's date in `YYYY.MM.DD` format. |
+| `--debug` | Build the default debug word set and write readable JSON. |
+| `--test-words` | Comma- or semicolon-separated words; implies `--debug`. Matching is case-insensitive. |
+| `--open-panels` | Force details panels open. |
+| `--closed-panels` | Keep details panels closed, including in debug builds. |
+| `--keep-json` | Keep generated term-bank JSON after compression. |
+| `--discard-json` | Remove term-bank JSON even in debug builds. |
+| `--skip-validation` | Skip extraction and ZIP validation. Intended only for diagnosis, not release builds. |
 
-4. **Import to Yomitan**: Open your Yomitan settings, go to Dictionaries, and import the newly generated `.zip` file directly. Done!
+Run `python main.py --help` for the current command-line help.
 
----
+### Language Policy
 
-## ⚖️ License (开源协议)
-This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
-You are free to use, modify, and distribute this software, but any derivative works (including modifications or providing it as a network service) must strictly be open-sourced under the same license.
+The full Immersion build contains Chinese only in approved shortcut, grammar, variant, cross-reference, and panel-title nodes. Chinese definition, example, note, and panel-body nodes: `0`. The full Global build contains both `0` `lang=zh` nodes and `0` CJK text characters.
 
----
+Each generated `index.json` includes the converter author, [GitHub project URL](https://github.com/shoujocyber/OALD10-Yomitan-Converter), [FreeMdict release page](https://forum.freemdict.com/t/topic/44052), OUP/source attribution with the [FreeMdict data thread](https://forum.freemdict.com/t/topic/43710), and ISO source/target language codes. Automatic-update metadata is intentionally omitted until stable `indexUrl` and `downloadUrl` endpoints exist.
 
-## ⚠️ Disclaimer (免责声明)
-This repository ONLY contains the Python processing script. It does NOT contain, distribute, or host any copyrighted dictionary data (HTML/MDX/DB). Please use this script strictly for personal educational purposes. All data copyrights belong to Oxford University Press and the original data providers.
+The source also contains two genuinely empty sense placeholders (`cave` and `said`); they are reported and filtered rather than rendered as blank senses.
+
+## Import and Update
+
+Import the generated ZIP directly in Yomitan. Do not extract it first.
+
+When upgrading, remove the old dictionary from Yomitan, import the new ZIP, and wait for indexing to finish before testing lookups. Anki card templates can override dictionary colors and fonts; V3.1 guarantees valid structured content and bundled class definitions, but cannot override every template's CSS policy.
+
+## ⚖️ License
+
+Licensed under the [GNU Affero General Public License v3.0](LICENSE).
+
+## ⚠️ Disclaimer
+
+This repository contains only the conversion script. It does not contain, distribute, or host Oxford dictionary data. Use the converter for personal educational purposes and respect the rights of Oxford University Press and the original data providers.
